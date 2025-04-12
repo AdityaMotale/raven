@@ -29,13 +29,12 @@ _start:
   test rax, rax
   jz error_args
 
-  ;; read num arg from argv
-  mov rsi, [rsp + 24]           ; pointer to arg2
-  call read_arg
+  ;; parse int from ascii
+  mov r8, [rsp + 24]
+  call parse_num
 
-  mov rax, 0x01
-  mov rdi, 0x01
-  syscall
+  inc rax
+  inc rax
 
   jmp exit
 
@@ -86,6 +85,46 @@ match_arg:
   jmp .ret
 .done:
   mov rax, 1
+.ret:
+  ret
+
+;; parse a decimal num from arg2
+;;
+;; 📝 NOTE: -ve nums are not supported
+;;
+;; args,
+;; - r8 -> pointer to arg on stack
+;;
+;; ret,
+;; - rax -> decimal value or -1 on error
+parse_num:
+  xor rax, rax
+.loop:
+  ;; read the next char from the buf
+  movzx rcx, byte [r8]
+
+  ;; check for null terminator
+  cmp cl, 0x00
+  je .ret
+
+  ;; check for a valid digit (must be > '0' and < '9')
+  cmp cl, '0'
+  jl .err
+
+  cmp cl, '9'
+  jg .err
+
+  ;; conver ascii to int `atoi`
+  sub cl, '0'
+
+  imul rax, rax, 10             ; rax = rax * 10
+
+  add rax, rcx
+  inc r8
+
+  jmp .loop
+.err:
+  mov rax, -1
 .ret:
   ret
 
