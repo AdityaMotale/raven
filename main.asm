@@ -6,6 +6,9 @@ section .data
 
   arg_d2b db "d2b"
 
+section .bss
+  d2b_buf resb 65               ; 64 bits + 1 null terminator
+
 section .text
 _start:
   mov rcx, [rsp]                  ; read `argc` from stack
@@ -33,8 +36,17 @@ _start:
   mov r8, [rsp + 24]
   call parse_num
 
-  inc rax
-  inc rax
+  ;; convert num to binary
+  mov rdi, rax                  ; rax holds the parse num
+  lea rsi, [d2b_buf]
+  call num_to_binary
+
+  ;; print the binary num
+  mov rax, 0x01
+  mov rdi, 0x01
+  lea rsi, [d2b_buf]
+  mov rdx, rbx
+  syscall
 
   jmp exit
 
@@ -117,7 +129,7 @@ parse_num:
   ;; conver ascii to int `atoi`
   sub cl, '0'
 
-  imul rax, rax, 10             ; rax = rax * 10
+  imul rax, 10             ; rax = rax * 10
 
   add rax, rcx
   inc r8
@@ -125,6 +137,72 @@ parse_num:
   jmp .loop
 .err:
   mov rax, -1
+.ret:
+  ret
+
+;; Convert num to binary string
+;;
+;; args,
+;; - rdi -> input number
+;; - rsi -> pointer to buf to store the binary (should be atleast 65 bytes)
+;;
+;; ret,
+;; - rbx -> len of string
+num_to_binary:
+  xor rbx, rbx
+
+  ;; check if input num == 0
+  cmp rdi, 0
+  jne .loop
+
+  ;; if num == 0, output "0" and len "1"
+  mov byte [rsi], '0'
+  inc rbx
+  jmp .ret
+.loop:
+  xor rdx, rdx                  ; clear rdx for division
+  mov rax, rdi                  ; load the current num (dividend)
+  mov rcx, 2
+  div rcx                       ; divide `rax` by `rcx`, quotient in rax, remainder in rdx
+
+  ;; rdx now holds '0' or '1',
+  add rdx, '0'                  ; convert rdx into ascii from num, `itoa`
+  mov [rsi + rbx], dl
+
+  inc rbx                       ; increment buf pointer
+
+  ;; update `rdi` w/ quotient
+  mov rdi, rax
+
+  ;; repeat loop till `rdi == 0`
+  test rdi, rdi
+  jz .done
+
+  jmp .loop                     ; continue the loop
+.done:
+  ;; we've stored digits in reverse order in buffer
+  ;; now we need to reverse their order,
+  ;; here `rbx` holds num of digits
+  mov rcx, rbx                  ; loop counter
+  mov r8, rbx                   ; save the len of the buffer
+  xor rdx, rdx                  ; index = 0
+  dec rbx                       ; rcx = rcx - 1 i.e. the last index
+.reverse_loop:
+  cmp rdx, rbx
+  jge .done_rev_loop
+
+  ;; swap the bytes at index `rdx` and `rbx`
+  mov al, [rsi + rdx]
+  mov cl, [rsi + rbx]
+  mov [rsi + rdx], cl
+  mov [rsi + rbx], al
+
+  inc rdx
+  dec rbx
+
+  jmp .reverse_loop
+.done_rev_loop:
+  mov rbx, r8                   ; load the saved len of buffer
 .ret:
   ret
 
