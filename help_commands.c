@@ -8,20 +8,14 @@ const char *reset = "\033[0m";         // escape code
 
 const int logo_width = 50;
 
-const int ascii_art_len = 12;
+const int ascii_art_len = 6;
 const char *ascii_art[] = {
-    "",
-    "",
-    "",
     "  /$$$$$$  /$$$$$$  /$$    /$$/$$$$$$  /$$$$$$$     ",
     " /$$__  $$|____  $$|  $$  /$$/$$__  $$| $$__  $$    ",
     "| $$  \\__/ /$$$$$$$ \\  $$/$$/ $$$$$$$$| $$  \\ $$ ",
     "| $$      /$$__  $$  \\  $$$/| $$_____/| $$  | $$   ",
     "| $$     |  $$$$$$$   \\  $/ |  $$$$$$$| $$  | $$   ",
     "|__/      \\_______/    \\_/   \\_______/|__/  |__/ ",
-    "",
-    "",
-    "",
 };
 
 const int cmds_len = 4;
@@ -38,6 +32,9 @@ const char *cmd_bind[] = {
     "h2d",
 };
 
+// Print a separator.
+void print_seperator(void) { printf("\n\n\n"); }
+
 void print_commands(void) {
   // fetch no. of available col's in terminal view
   struct winsize w;
@@ -46,10 +43,14 @@ void print_commands(void) {
 
   int left_padding = (terminal_width - logo_width) / 2;
 
+  print_seperator();
+
   // print ascii art
   for (int i = 0; i < ascii_art_len; i++) {
     printf("%*s%s\n", left_padding, "", ascii_art[i]);
   }
+
+  print_seperator();
 
   // Print each command line with colors.
   for (int i = 0; i < cmds_len; i++) {
@@ -64,6 +65,5 @@ void print_commands(void) {
     printf("%s%s%s\n", orange, cmd_bind[i], reset);
   }
 
-  // Print a separator.
-  printf("\n\n\n");
+  print_seperator();
 }
