@@ -1,4 +1,4 @@
-global _start
+global main
 
 section .data
   msg_invalid_args db "Invalid Argument", 0x0a
@@ -6,20 +6,28 @@ section .data
 
   arg_d2b db "d2b"
 
+extern print_commands
+
 section .bss
   d2b_buf resb 65               ; 64 bits + 1 null terminator
 
 section .text
-_start:
-  mov rcx, [rsp]                  ; read `argc` from stack
+main:
+  ;; print help cmds if no arg's are provided
+  cmp rdi, 1
+  jle help_cmds
 
-  ;; note: `argc` also counts
+  ;; note: `argc` stored in `rdi` also counts
   ;; application's name
-  cmp rcx, 3                      ; user must provide 2 args (cmd + num)
+  cmp rdi, 3                      ; user must provide 2 args (cmd + input)
   jne error_args
 
+  ;; store pointer to list pointers to args
+  mov rcx, rsi
+
   ;; read cmd arg from argv
-  mov rsi, [rsp + 16]           ; pointer to arg1
+  ;; 📝 NOTE: First arg is app's name
+  mov rsi, [rcx + 8]           ; pointer to arg1
   call read_arg
 
   ;; check if cmd is valid
@@ -33,7 +41,7 @@ _start:
   jz error_args
 
   ;; parse int from ascii
-  mov r8, [rsp + 24]
+  mov r8, [rcx + 16]
   call parse_num
 
   ;; convert num to binary
@@ -205,6 +213,10 @@ num_to_binary:
   mov rbx, r8                   ; load the saved len of buffer
 .ret:
   ret
+
+help_cmds:
+  call print_commands
+  jmp exit
 
 error_args:
   mov rax, 0x01
