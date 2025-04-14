@@ -61,8 +61,8 @@ main:
   call base10_to_base2
 
   ;; print the binary num
-  mov rax, 0x01
-  mov rdi, 0x01
+  lea rsi, [d2b_buf]
+  mov rdx, rbx
   call print
 
   jmp exit
