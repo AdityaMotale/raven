@@ -57,10 +57,9 @@ parse_base10:
 
   ;; check for a valid digit (must be > '0' and < '9')
   cmp cl, '0'
-  jl .err
-
+  jb .err
   cmp cl, '9'
-  jg .err
+  ja .err
 
   ;; conver ascii to int `atoi`
   sub cl, '0'

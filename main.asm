@@ -55,6 +55,10 @@ main:
   mov r8, [rcx + 16]
   call parse_base10
 
+  ;; check for parse errors (rax == -1)
+  test rax, rax
+  js error_args
+
   ;; convert num to binary
   mov rdi, rax                  ; rax holds the parse num
   lea rsi, [d2b_buf]
