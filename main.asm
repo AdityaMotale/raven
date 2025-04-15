@@ -1,10 +1,12 @@
 global main
 
 ;; utils (`utils.asm`)
-extern parse_base10
 extern match_buffers
 extern read_arg
 extern print
+
+;; parsers (`parser.asm`)
+extern parse_base10
 
 ;; conversions (`conversions.asm`)
 extern base10_to_base2
