@@ -4,6 +4,10 @@ section .text
 
 ;; Convert a num from base10 to base2
 ;;
+;; 📝 NOTE: dest buffer (`rsi`) should be 65 bytes (64 + 1), a num can only
+;; be 64 bytes long, and one is for null terminator to break the line while
+;; printing
+;;
 ;; args,
 ;; - rdi -> input number
 ;; - rsi -> pointer to buf to store the binary (should be atleast 65 bytes)
@@ -66,4 +70,6 @@ base10_to_base2:
 .done_rev_loop:
   mov rbx, r8                   ; load the saved len of buffer
 .ret:
+  mov byte [rsi + rbx], 0x0a
+  inc rbx
   ret
