@@ -73,3 +73,7 @@ base10_to_base2:
   mov byte [rsi + rbx], 0x0a
   inc rbx
   ret
+
+;; Convert a number from base2 to base10
+;;
+base2_to_base10:

@@ -15,13 +15,17 @@ extern base10_to_base2
 extern print_commands
 
 section .data
-  msg_invalid_args db "Invalid Argument", 0x0a
+  msg_invalid_args db "Invalid Arguments", 0x0a
   msg_invalid_args_len equ $ - msg_invalid_args
 
   arg_d2b db "d2b"
 
 section .bss
-  d2b_buf resb 65               ; 64 bits + 1 null terminator
+  ;; result buffer for d2b
+  d2b_res_buf resb 65           ; 64 bits + 1 null terminator
+
+  ;; input buffer for b2d
+  b2d_inp_buf resb 65           ; (64 + 1) input binary num should be max 64 bytes
 
 section .text
 main:
@@ -63,11 +67,11 @@ main:
 
   ;; convert num to binary
   mov rdi, rax                  ; rax holds the parse num
-  lea rsi, [d2b_buf]
+  lea rsi, [d2b_res_buf]
   call base10_to_base2
 
   ;; print the binary num
-  lea rsi, [d2b_buf]
+  lea rsi, [d2b_res_buf]
   mov rdx, rbx
   call print
 
