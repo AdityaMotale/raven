@@ -18,7 +18,8 @@ section .data
   msg_invalid_args db "Invalid Arguments", 0x0a
   msg_invalid_args_len equ $ - msg_invalid_args
 
-  arg_d2b db "d2b"
+  buf_d2b db "d2b"
+  buf_b2d db "b2d"
 
 section .bss
   ;; result buffer for d2b
@@ -42,18 +43,42 @@ main:
   ;; which is stored in `rsi` by default
   mov rcx, rsi
 
-  ;; check if cmd is valid
-  ;; currently only `d2b` is valid
+  jmp match_cmds
+
+;; match user's cmd with available cmds
+;;
+;; available cmds,
+;; - d2b
+;; - b2d
+match_cmds:
+  ;; pointer to user's cmd
   mov r8, [rcx + 8]
-  lea r9, [arg_d2b]
-  mov r10, 0x03                 ; max len allowed for cmd
+
+  ;; max len allowed for cmd
+  mov r10, 0x03
+
+  ;; match w/ `d2b`
+  lea r9, [buf_d2b]
   call match_buffers
 
-  ;; check for match errors (rax == 0)
+  ;; check if buffers match (rax == 0)
   test rax, rax
-  jz error_args
+  jz cmd_d2b
 
-  ;; parse int from ascii
+  ;; match w/ `b2d`
+  lea r9, [buf_b2d]
+  call match_buffers
+
+  ;; check if buffers match (rax == 0)
+  test rax, rax
+  jz cmd_b2d
+
+  ;; show unknown arg err if not matched with any cmds
+  jmp error_args
+
+;; handle `d2b` command
+cmd_d2b:
+  ;; parse user provided base10 num
   mov r8, [rcx + 16]
   call parse_base10
 
@@ -61,16 +86,24 @@ main:
   test rax, rax
   js error_args
 
-  ;; convert num to binary
-  mov rdi, rax                  ; rax holds the parse num
+  ;; convert base10 to base2
+  mov rdi, rax                  ; `rax` holds parsed base10 value
   lea rsi, [d2b_res_buf]
-  call base10_to_base2
+  call base10_to_base2          ; returns `rax` (error state), `rbx` (len of buf)
 
-  ;; print the binary num
+  ;; check for conversion error (rax == 1)
+  test rax, rax
+  jnz error_args
+
+  ;; print the result
   lea rsi, [d2b_res_buf]
   mov rdx, rbx
   call print
 
+  jmp exit
+
+;; handle `b2d` command
+cmd_b2d:
   jmp exit
 
 help_cmds:

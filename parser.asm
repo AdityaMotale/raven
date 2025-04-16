@@ -51,7 +51,8 @@ parse_base10:
 ;; - rsi -> pointer to input buffer
 ;;
 ;; ret,
-;; - rax -> no. of bytes stored in input buffer, -1 on invalid input
+;; - rax -> no. of bytes stored in input buffer,
+;;         -1 on invalid input
 parse_base2:
   xor rax, rax                  ; init `rax` at 0
 .loop:

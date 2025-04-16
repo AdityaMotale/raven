@@ -14,18 +14,20 @@ section .text
 ;;
 ;; ret,
 ;; - rbx -> len of string stored in buf pointed by `rsi`
+;; - rax -> `1` on error `0` if everything is good
 base10_to_base2:
   xor rbx, rbx
+  xor rax, rax
 
-  ;; check if input num == 0
+  ;; check if input num == 0 or is -ve
   cmp rdi, 0x00
-  jne .loop
-
-  ;; if num == 0, output "0" and len "1"
-  mov byte [rsi], '0'
-  inc rbx
-  jmp .ret
+  jz .zero
+  jl .err
 .loop:
+  ;; check for buffer overflow, buf size should be `>= 64`
+  cmp rbx, 64
+  jg .err
+
   xor rdx, rdx                  ; clear rdx for division
   mov rax, rdi                  ; load the current num (dividend)
   mov rcx, 0x02                 ; need to div by `2`
@@ -42,10 +44,10 @@ base10_to_base2:
 
   ;; repeat loop till `rdi == 0`
   test rdi, rdi
-  jz .done
+  jz .loop_done
 
   jmp .loop                     ; continue the loop
-.done:
+.loop_done:
   ;; we've stored digits in reverse order in buffer
   ;; now we need to reverse their order,
   ;; here `rbx` holds num of digits
@@ -69,11 +71,20 @@ base10_to_base2:
   jmp .reverse_loop
 .done_rev_loop:
   mov rbx, r8                   ; load the saved len of buffer
-.ret:
+  jmp .done
+.zero:
+  ;; as input is "0",
+  ;; output "0" and len "1"
+  mov byte [rsi], '0'
+  inc rbx
+.done:
+  ;; add null terminator for newline print
   mov byte [rsi + rbx], 0x0a
   inc rbx
-  ret
 
-;; Convert a number from base2 to base10
-;;
-base2_to_base10:
+  mov rax, 0x00                 ; no error
+  jmp .ret
+.err:
+  mov rax, 0x01
+.ret:
+  ret
