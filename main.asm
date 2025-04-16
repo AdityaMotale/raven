@@ -39,16 +39,12 @@ main:
   jne error_args
 
   ;; store pointer to list pointers to args
+  ;; which is stored in `rsi` by default
   mov rcx, rsi
-
-  ;; read cmd arg from argv
-  ;; 📝 NOTE: First arg is app's name
-  mov rsi, [rcx + 8]           ; pointer to arg1
-  call read_arg
 
   ;; check if cmd is valid
   ;; currently only `d2b` is valid
-  mov r8, rsi
+  mov r8, [rcx + 8]
   lea r9, [arg_d2b]
   mov r10, 0x03                 ; max len allowed for cmd
   call match_buffers

@@ -17,24 +17,6 @@ print:
   mov rdi, 0x01
   syscall
 
-;; read arg from `argv`
-;;
-;; args,
-;; - rsi -> pointer to arg in stack
-;;
-;; ret,
-;; - rdx -> len of the arg
-read_arg:
-  xor rdx, rdx
-.count:
-  cmp byte [rsi + rdx], 0x00
-  je .ret
-
-  inc rdx
-  jmp .count
-.ret:
-  ret
-
 ;; match two buffers to check if they are equal
 ;;
 ;; args,
