@@ -57,11 +57,11 @@ parse_base2:
   xor rax, rax                  ; init `rax` at 0
 .loop:
   ;; read the next char from the buf
-  movzx rcx, byte [r8]
+  movzx rcx, byte [r8 + rax]
 
   ;; check for null terminator
   cmp cl, 0x00
-  je .done
+  je .ret
 
   ;; validate input byte (must be either 0 or 1)
   cmp cl, '0'
@@ -71,10 +71,10 @@ parse_base2:
 
   jmp .err                      ; if input is nither 0 nor 1
 .handle_0:
-  mov byte [r8 + rax], '0'
+  mov byte [rsi + rax], '0'
   jmp .next
 .handle_1:
-  mov byte [r8 + rax], '1'
+  mov byte [rsi + rax], '1'
 .next:
   inc rax
 
@@ -83,11 +83,6 @@ parse_base2:
   jge .err
 
   jmp .loop
-.done:
-  mov byte [r8 + rax], 0x00     ; add null terminator in the buffer
-  inc rax
-
-  jmp .ret
 .err:
   mov rax, -1
 .ret:

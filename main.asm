@@ -7,9 +7,11 @@ extern print
 
 ;; parsers (`parser.asm`)
 extern parse_base10
+extern parse_base2
 
 ;; conversions (`conversions.asm`)
 extern base10_to_base2
+extern base2_to_base10
 
 ;; help commands (`help_commands.c`)
 extern print_commands
@@ -25,8 +27,9 @@ section .bss
   ;; result buffer for d2b
   d2b_res_buf resb 65           ; 64 bits + 1 null terminator
 
-  ;; input buffer for b2d
-  b2d_inp_buf resb 65           ; (64 + 1) input binary num should be max 64 bytes
+  ;; buffers for b2d
+  b2d_inp_buf resb 64           ; input binary num should be max 64 bits
+  b2d_out_buf resq 1            ; 8 bytes for num (u64)
 
 section .text
 main:
@@ -104,6 +107,33 @@ cmd_d2b:
 
 ;; handle `b2d` command
 cmd_b2d:
+  ;; parse user provided base2 num
+  mov r8, [rcx + 16]
+  lea rsi, [b2d_inp_buf]        ; buf to store users input
+  call parse_base2              ; returns `rax` (no. of bytes written in buf)
+
+  ;; check for parse errors
+  test rax, rax
+  js error_args
+
+  ;; convert base2 to base10
+  lea rsi, [b2d_inp_buf]        ; pointer to input buffer
+  mov r8, rax                  ; size of input buffer
+  call base2_to_base10         ; returns `rax` (base10 value)
+
+  ;; check for conversions error (rax == -1)
+  test rax, rax
+  js error_args
+
+  ;; store output into output buf
+  lea rdi, [b2d_out_buf]
+  mov [rdi], rax
+
+  ;; print the result
+  lea rsi, [b2d_out_buf]
+  mov rdx, 0x08
+  call print
+
   jmp exit
 
 help_cmds:

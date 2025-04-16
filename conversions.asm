@@ -1,4 +1,5 @@
 global base10_to_base2
+global base2_to_base10
 
 section .text
 
@@ -86,5 +87,53 @@ base10_to_base2:
   jmp .ret
 .err:
   mov rax, 0x01
+.ret:
+  ret
+
+;; Convert a num from base2 to base10
+;;
+;; args,
+;; - rsi -> pointer to input buf
+;; - r8 -> len of input buf
+;;
+;; ret,
+;; - rax -> base10 value or `-1` on err
+base2_to_base10:
+  xor rax, rax                  ; result
+  xor rdx, rdx                  ; current bit
+  xor rbx, rbx                  ; index = 0
+
+  ;; validate length (r8 > 0)
+  test r8, r8
+  jz .err                       ; error if 0
+  js .err                       ; error if -ve
+
+  ;; validate upper range (r8 <= 64)
+  ;; no more then 64 bits
+  cmp r8, 64
+  jg .err
+.loop:
+  cmp rbx, r8
+  jge .ret
+
+  mov dl, [rsi + rbx]           ; lower 8 bits of `rdx`
+
+  ;; check for (< 0)
+  cmp dl, '0'
+  jb .err
+
+  ;; check for (> 1)
+  cmp dl, '1'
+  ja .err
+
+  sub dl, '0'                   ; now dl = 0 or 1
+
+  shl rax, 1                    ; res *= 2
+  add rax, rdx                  ; res += bit
+
+  inc rbx
+  jmp .loop
+.err:
+  mov rax, -1
 .ret:
   ret
