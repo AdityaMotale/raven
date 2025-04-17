@@ -12,6 +12,7 @@ extern parse_base2
 ;; conversions (`conversions.asm`)
 extern base10_to_base2
 extern base2_to_base10
+extern u64_to_ascii
 
 ;; help commands (`help_commands.c`)
 extern print_commands
@@ -28,8 +29,8 @@ section .bss
   d2b_res_buf resb 65           ; 64 bits + 1 null terminator
 
   ;; buffers for b2d
-  b2d_inp_buf resb 64           ; input binary num should be max 64 bits
-  b2d_out_buf resq 1            ; 8 bytes for num (u64)
+  b2d_inp_buf resb 64            ; input binary num should be max 64 bits
+  b2d_out_buf resb 21            ; (20 + 1) 20 bytes for u64 num
 
 section .text
 main:
@@ -117,21 +118,21 @@ cmd_b2d:
   js error_args
 
   ;; convert base2 to base10
-  lea rsi, [b2d_inp_buf]        ; pointer to input buffer
-  mov r8, rax                  ; size of input buffer
-  call base2_to_base10         ; returns `rax` (base10 value)
+  lea rsi, [b2d_inp_buf]       ; pointer to input buf
+  mov r8, rax                  ; size of input buf
+  call base2_to_base10         ; returns `rax` (base10 number)
 
   ;; check for conversions error (rax == -1)
   test rax, rax
   js error_args
 
-  ;; store output into output buf
-  lea rdi, [b2d_out_buf]
-  mov [rdi], rax
+  ;; convert u64 (base10) to ascii
+  lea rsi, [b2d_out_buf]
+  call u64_to_ascii             ; returns `rax` (size of out buf)
 
   ;; print the result
   lea rsi, [b2d_out_buf]
-  mov rdx, 0x08
+  mov rdx, rax
   call print
 
   jmp exit

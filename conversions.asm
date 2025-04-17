@@ -1,5 +1,6 @@
 global base10_to_base2
 global base2_to_base10
+global u64_to_ascii
 
 section .text
 
@@ -133,6 +134,70 @@ base2_to_base10:
 
   inc rbx
   jmp .loop
+.err:
+  mov rax, -1
+.ret:
+  ret
+
+;; Convert a u64 number to an ascii string
+;;
+;; args,
+;; - rax -> u64 number
+;; - rsi -> pointer to out buf
+;;
+;; ret,
+;; - rax -> len of out buf or -1 on err
+u64_to_ascii:
+  xor r9, r9                  ; index = 0
+.loop:
+  ;; check for buf overflow, (index <= 20)
+  cmp r9, 20
+  jg .err
+
+  ;;📝 NOTE: `rax` holds the value to be divided
+  xor rdx, rdx                  ; clear for division
+  mov rcx, 0x0A                 ; divide by 10
+  div rcx                       ; divide `rax` by `rcx`, quotient in `rax`, remainder in `rdx`
+
+  add rdx, '0'                  ; int to ascii, `itoa`
+  mov [rsi + r9], dl            ; lower bytes of rdx
+
+  inc r9                        ; increment index
+
+  ;; break loop if `rax == 0`, i.e. the quotient
+  test rax, rax
+  jz .loop_done
+
+  jmp .loop                     ; continue the loop
+.loop_done:
+  ;; we've stored digits in reverse order in buf
+  ;; now we need to reverse their order,
+  ;; here `r9` holds num of digits stored in out buf
+  mov rbx, r9
+  mov rcx, rbx                   ; loop counter
+  xor rdx, rdx                   ; index = 0
+  dec rbx                        ; the last index (index - 1)
+.rev_loop:
+  cmp rdx, rbx
+  jge .done
+
+  ;; swap the bytes
+  mov al, [rsi + rdx]           ; lower bytes of `rax`
+  mov cl, [rsi + rbx]           ; lower bytes of `rcx`
+  mov [rsi + rdx], cl
+  mov [rsi + rbx], al
+
+  inc rdx
+  dec rbx
+
+  jmp .rev_loop
+.done:
+  ;; add newline in out buf
+  mov byte [rsi + r9], 0x0a
+  inc r9
+
+  mov rax, r9                   ; size of out buf
+  jmp .ret
 .err:
   mov rax, -1
 .ret:
