@@ -6,5 +6,6 @@ pkgs.mkShell {
     pkgs.gcc
     pkgs.gcc.libc
     pkgs.gdb
+    pkgs.glibc.static
   ];
 }

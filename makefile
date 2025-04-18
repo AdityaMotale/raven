@@ -11,7 +11,7 @@ all: clean
 	nasm -f elf64 conversions.asm -o conversions.o
 	nasm -f elf64 parser.asm -o parser.o
 	gcc -c help_commands.c -o help_commands.o
-	gcc $(OBJS) -o main
+	gcc -static $(OBJS) -o main
 
 # Debug target
 debug: clean
@@ -21,7 +21,7 @@ debug: clean
 	nasm -g -F dwarf -f elf64 conversions.asm -o conversions.o
 	nasm -g -F dwarf -f elf64 parser.asm -o parser.o
 	gcc -g -c help_commands.c -o help_commands.o
-	gcc -g $(OBJS) -o main
+	gcc -g -static $(OBJS) -o main
 
 # Clean target
 clean:
