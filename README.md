@@ -1,21 +1,16 @@
-# Raven
-
-Convert numbers with the intelligence of the namesake.
-
-[![CI](https://img.shields.io/github/actions/workflow/status/AdityaMotale/raven/unit_test.yaml?branch=master)](https://github.com/AdityaMotale/raven/actions/workflows/unit_test.yaml)
-[![Release](https://img.shields.io/github/v/release/AdityaMotale/raven)](https://github.com/AdityaMotale/raven/releases/latest)
-
 <p align="center">
 <pre>
-  /$$$$$$  /$$$$$$  /$$    /$$/$$$$$$  /$$$$$$$ 
- /$$__  $$|____  $$|  $$  /$$/$$__  $$| $$__  $$ 
-| $$  \__/ /$$$$$$$ \  $$/$$/ $$$$$$$$| $$  \ $$ 
-| $$      /$$__  $$  \  $$$/| $$_____/| $$  | $$ 
-| $$     |  $$$$$$$   \  $/ |  $$$$$$$| $$  | $$ 
-|__/      \_______/    \_/   \_______/|__/  |__/ 
+                               /$$$$$$  /$$$$$$  /$$    /$$/$$$$$$  /$$$$$$$ 
+                             /$$__  $$|____  $$|  $$  /$$/$$__  $$| $$__  $$ 
+                            | $$  \__/ /$$$$$$$ \  $$/$$/ $$$$$$$$| $$  \ $$ 
+                            | $$      /$$__  $$  \  $$$/| $$_____/| $$  | $$ 
+                            | $$     |  $$$$$$$   \  $/ |  $$$$$$$| $$  | $$ 
+                            |__/      \_______/    \_/   \_______/|__/  |__/ 
 </pre>
 </p>
 
+[![CI](https://img.shields.io/github/actions/workflow/status/AdityaMotale/raven/unit_test.yaml?branch=master)](https://github.com/AdityaMotale/raven/actions/workflows/unit_test.yaml)
+[![Release](https://img.shields.io/github/v/release/AdityaMotale/raven)](https://github.com/AdityaMotale/raven/releases/latest)
 
 ## 📥 Install
 
