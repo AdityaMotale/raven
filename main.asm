@@ -56,6 +56,8 @@ main:
 ;; available cmds,
 ;; - d2b
 ;; - b2d
+;; - d2h
+;; - h2d
 match_cmds:
   ;; pointer to user's cmd
   mov r11, [rcx + 8]
