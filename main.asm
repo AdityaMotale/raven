@@ -8,6 +8,7 @@ extern print
 ;; parsers (`parser.asm`)
 extern parse_base10
 extern parse_base2
+extern parse_base16
 
 ;; conversions (`conversions.asm`)
 extern base10_to_base2
@@ -25,6 +26,7 @@ section .data
   buf_d2b db "d2b"
   buf_b2d db "b2d"
   buf_d2h db "d2h"
+  buf_h2d db "h2d"
 
 section .bss
   ;; 64 bits + 1 null terminator
@@ -86,6 +88,15 @@ match_cmds:
   ;; check if buffers match (rax == 0)
   test rax, rax
   jz cmd_d2h
+
+  ;; match w/ `h2d`
+  lea r9, [buf_h2d]
+  mov r8, r11
+  call match_buffers
+
+  ;; check if buffers match (rax == 0)
+  test rax, rax
+  jz cmd_h2d
 
   ;; show unknown arg err if not matched with any cmds
   jmp error_args
@@ -169,6 +180,24 @@ cmd_d2h:
   ;; print the result
   lea rsi, [out_buf]
   mov rdx, rbx
+  call print
+
+  jmp exit
+
+;; handle `h2d` cmd
+cmd_h2d:
+  ;; parse user provided base16 num
+  mov r8, [rcx + 16]
+  lea rsi, [inp_buf]
+  call parse_base16
+
+  ;; check for parse errors
+  test rax, rax
+  js error_args
+
+  ;; print the parsed buf
+  mov rdx, rax
+  lea rsi, [inp_buf]
   call print
 
   jmp exit

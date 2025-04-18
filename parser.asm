@@ -1,5 +1,6 @@
 global parse_base10
 global parse_base2
+global parse_base16
 
 section .text
 
@@ -87,3 +88,58 @@ parse_base2:
   mov rax, -1
 .ret:
   ret
+
+;; parse a base16 number from terminal args
+;;
+;; 📝 NOTE: input hex num should be <= 64 digits
+;;
+;; args,
+;; - r8  -> pointer to arg string on stack
+;; - rsi -> pointer to input buffer
+;;
+;; ret,
+;; - rax -> number of bytes stored in input buffer,
+;;         -1 on invalid input
+parse_base16:
+    xor   rax, rax            ; count = 0
+.parse_loop:
+    movzx rcx, byte [r8 + rax]
+    cmp   cl, 0
+    je    .done               ; end of string
+
+    ;;--- digit? 0–9 ---
+    cmp   cl, '0'
+    jl    .check_lower        ; below '0' → not a digit
+    cmp   cl, '9'
+    jle   .store_digit        ; '0'–'9'
+.check_lower:
+    ;;--- lowercase hex? a–f ---
+    cmp   cl, 'a'
+    jl    .check_upper        ; below 'a'
+    cmp   cl, 'f'
+    jle   .store_lower        ; 'a'–'f'
+.check_upper:
+    ;;--- uppercase hex? A–F ---
+    cmp   cl, 'A'
+    jl    .error              ; below 'A'
+    cmp   cl, 'F'
+    jle   .store_upper        ; 'A'–'F'
+.error:
+    mov   rax, -1
+    ret
+.store_digit:
+    mov   [rsi + rax], cl     ; keep '0'–'9'
+    jmp   .advance
+.store_lower:
+    sub   cl, 32              ; 'a'–'f' → 'A'–'F'
+    mov   [rsi + rax], cl
+    jmp   .advance
+.store_upper:
+    mov   [rsi + rax], cl     ; keep 'A'–'F'
+.advance:
+    inc   rax
+    cmp   rax, 64
+    jge   .error              ; too many digits
+    jmp   .parse_loop
+.done:
+    ret
