@@ -15,6 +15,7 @@ extern base10_to_base2
 extern base2_to_base10
 extern u64_to_ascii
 extern base10_to_base16
+extern base16_to_base10
 
 ;; help commands (`help_commands.c`)
 extern print_commands
@@ -195,9 +196,22 @@ cmd_h2d:
   test rax, rax
   js error_args
 
-  ;; print the parsed buf
+  ;; convert base2 to base10
+  lea rsi, [inp_buf]       ; pointer to input buf
+  mov r8, rax              ; size of input buf
+  call base16_to_base10    ; returns `rax` (base10 number)
+
+  ;; check for conversions error (rax == -1)
+  test rax, rax
+  js error_args
+
+  ;; convert u64 (base10) to ascii
+  lea rsi, [out_buf]
+  call u64_to_ascii             ; returns `rax` (size of out buf)
+
+  ;; print the result
+  lea rsi, [out_buf]
   mov rdx, rax
-  lea rsi, [inp_buf]
   call print
 
   jmp exit

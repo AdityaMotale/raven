@@ -2,6 +2,7 @@ global base10_to_base2
 global base2_to_base10
 global u64_to_ascii
 global base10_to_base16
+global base16_to_base10
 
 section .text
 
@@ -288,3 +289,68 @@ base10_to_base16:
   mov rax, 1                    ; err code
 .ret:
   ret
+
+;; Convert a num from base16 to base10
+;;
+;; args,
+;; - rsi → pointer to input buf
+;; - r8  → len of input buf
+;;
+;; ret,
+;; - rax → base10 value, or `-1` on error
+base16_to_base10:
+    xor    rax, rax        ; accumulator = 0
+    xor    rcx, rcx        ; index       = 0
+
+    ;; sanity-check length: 0 < r8 ≤ 16
+    test   r8, r8
+    jz     .err
+    js     .err
+    cmp    r8, 16
+    jg     .err
+
+.loop:
+    cmp    rcx, r8
+    jge    .ret            ; done
+
+    movzx  rdx, byte [rsi + rcx]   ; rdx←ASCII byte
+
+    ;; decode hex digit into DL (0–15), leave RAX untouched
+    cmp    dl, '0'
+    jl     .err
+    cmp    dl, '9'
+    jle    .digit
+    cmp    dl, 'A'
+    jl     .err
+    cmp    dl, 'F'
+    jle    .upper
+    cmp    dl, 'a'
+    jl     .err
+    cmp    dl, 'f'
+    jle    .lower
+    jmp    .err
+
+.digit:
+    sub    dl, '0'
+    jmp    .acc
+
+.upper:
+    sub    dl, 'A' - 10     ; 65–10 = 55
+    jmp    .acc
+
+.lower:
+    sub    dl, 'a' - 10     ; 97–10 = 87
+
+.acc:
+    shl    rax, 4           ; multiply accumulator by 16
+    movzx  rdx, dl          ; zero‑extend digit into RDX
+    add    rax, rdx         ; accumulator += digit
+
+    inc    rcx
+    jmp    .loop
+
+.err:
+    mov    rax, -1
+
+.ret:
+    ret
