@@ -31,6 +31,10 @@ print:
 match_buffers:
   mov rdx, 0x01                 ; init the counter at `1`
 .loop:
+  ;; terminate loop
+  cmp rdx, r10
+  jg .equal
+
   mov al, [r8]
   cmp al, [r9]
   jne .not_equal
@@ -39,9 +43,7 @@ match_buffers:
   inc r9
   inc rdx
 
-  cmp rdx, r10
-  jl .loop
-  je .equal
+  jmp .loop
 .not_equal:
   mov rax, 0x01
   jmp .ret

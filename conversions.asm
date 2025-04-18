@@ -1,6 +1,7 @@
 global base10_to_base2
 global base2_to_base10
 global u64_to_ascii
+global base10_to_base16
 
 section .text
 
@@ -200,5 +201,90 @@ u64_to_ascii:
   jmp .ret
 .err:
   mov rax, -1
+.ret:
+  ret
+
+;; Convert a base10 num to base16
+;;
+;; args,
+;; rdi -> input base10 number
+;; rsi -> pointer to out buf
+;;
+;; ret,
+;; rbx -> size of out buf
+;; rax -> `1` on error, `0` otherwise
+base10_to_base16:
+  xor rbx, rbx                  ; len = 0
+  xor rax, rax
+
+  ;; check if input num == 0 or -ve
+  test rdi, rdi
+  jz .zero                      ; handle zero case
+  js .err                       ; error on -ve num
+.loop:
+  ;; check for buffer overflow, buf size should be `>= 64`
+  cmp rbx, 64
+  jg .err
+
+  xor   rdx, rdx         ; clear for division
+  mov   rax, rdi         ; dividend = current value
+  mov   rcx, 16          ; divide by `16`
+  div   rcx              ; rax = quotient, rdx = remainder (0–15)
+
+  ;; convert remainder into ASCII
+  cmp rdx, 9
+  jle .write_digit
+  add rdx, 55                   ; 10 -> 'A' (10+55=65), …, 15 -> 'F'
+  jmp .write_char
+.write_digit:
+  add rdx, '0'                  ; convert digit to ascii
+
+  ;; fall through and write char into out buffer
+.write_char:
+  mov [rsi + rbx], dl           ; store the char
+  inc rbx                       ; bump len
+
+  mov rdi, rax                  ; new val = quotient
+
+  ;; repeat loop till (rdi != 0)
+  test rdi, rdi
+  jnz .loop
+.loop_done:
+  ;; we've stored digits in reverse order in buffer
+  ;; now we need to reverse their order,
+  ;; here `rbx` holds num of digits
+  mov rcx, rbx                  ; loop counter
+  mov r8, rbx                   ; save the len of the buffer
+  xor rdx, rdx                  ; index = 0
+  dec rcx                       ; rcx = rcx - 1 i.e. the last index
+.rev_loop:
+  cmp rdx, rcx
+  jge .rev_loop_done
+
+  ;; swap the bytes at index `rdx` and `rbx`
+  mov al, [rsi + rdx]           ; lower bytes of `rax`
+  mov r9b, [rsi + rcx]           ; lower bytes of `rcx`
+  mov [rsi + rdx], r9b
+  mov [rsi + rcx], al
+
+  inc rdx
+  dec rcx
+
+  jmp .rev_loop
+.rev_loop_done:
+  mov rbx, r8                   ; restore len
+  jmp .done
+.zero:
+  mov byte [rsi], '0'
+  inc rbx
+.done:
+  ;; add null terminator for newline print
+  mov byte [rsi + rbx], 0x0A
+  inc rbx
+
+  xor rax, rax                 ; no error
+  jmp .ret
+.err:
+  mov rax, 1                    ; err code
 .ret:
   ret
