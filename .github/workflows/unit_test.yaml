@@ -1,0 +1,28 @@
+name: Unit Test
+
+on:
+  push:
+    branches: [ master ]
+
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@v17
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Init Nix-Shell & Run Tests
+        run: |
+          nix-shell --pure --run " \
+            make && \
+            gcc test.c -o test && \
+            ./test \
+          "
